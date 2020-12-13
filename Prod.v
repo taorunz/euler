@@ -31,18 +31,22 @@ Proof.
     apply prime_divisors_decomp. apply prime_divisors_distinct.
 Qed.
 
-Variable pairwise_coprime : list nat -> Prop.
+Inductive pairwise_coprime : list nat -> Prop :=
+    | PCnil : pairwise_coprime nil
+    | PCcons (x : nat) (l : list nat)
+        (Hxlc : ∀ y, y ∈ l → Nat.gcd x y = 1)
+        (Hlpc : pairwise_coprime l) : pairwise_coprime (x :: l).
 
 Theorem φ_prod_pairwise_coprime : 
     ∀ (l : list nat) (Hpc : pairwise_coprime l),
         φ (prod l) = prod (map φ l).
 Proof.
-    intros. induction l.
+    intros. induction Hpc.
     - simpl. admit. (* φ 1 = 1 *)
     - simpl in *. repeat rewrite Nat.add_0_r. 
       rewrite fold_left_mul_from_1.
-      rewrite fold_left_mul_from_1 with (φ a) _.
-      rewrite φ_multiplicative. rewrite IHl. reflexivity.
+      rewrite fold_left_mul_from_1 with (φ x) _.
+      rewrite φ_multiplicative. rewrite IHHpc. reflexivity.
 Admitted.
 
 Lemma prime_divisors_aux :
