@@ -542,18 +542,8 @@ Qed.
 
 (* Euler's totient function *)
 
-Definition coprimes n := filter (λ d, Nat.gcd n d =? 1) (seq 1 n).
+Definition coprimes n := filter (λ d, Nat.gcd n d =? 1) (seq 1 (n - 1)).
 Definition φ n := length (coprimes n).
-
-Lemma coprimes_n_n_minus_1 :
-  ∀ n, 2 ≤ n → coprimes n = filter (λ d, Nat.gcd n d =? 1) (seq 1 (n - 1)).
-Proof.
-  intros. unfold coprimes.
-  replace (seq 1 n) with ((seq 1 (n - 1)) ++ [n]).
-  rewrite filter_app. simpl.
-  rewrite Nat.gcd_diag_nonneg by flia H.
-  destruct (Nat.eqb_spec n 1); try flia H e.
-  
 
 (* Totient function is multiplicative *)
 
@@ -644,7 +634,7 @@ Definition copr_mul_of_prod_copr (m n : nat) '((x, y) : nat * nat) :=
   m * n - (n * x * v + m * (n - 1) * y * u) mod (m * n).
 
 Theorem in_coprimes_iff : ∀ n a,
-  a ∈ seq 1 n ∧ Nat.gcd n a = 1 ↔ a ∈ coprimes n.
+  a ∈ seq 1 (n - 1) ∧ Nat.gcd n a = 1 ↔ a ∈ coprimes n.
 Proof.
 intros.
 split; intros Ha. {
@@ -673,8 +663,7 @@ destruct (Nat.eq_dec n 0) as [Hnz| Hnz]. {
 apply in_coprimes_iff in Ha.
 destruct Ha as (Ha, Hga).
 apply in_seq in Ha.
-rewrite Nat.add_comm in Ha.
-(*rewrite Nat.sub_add in Ha. by flia Ha.*)
+rewrite Nat.add_comm, Nat.sub_add in Ha by flia Ha.
 unfold prod_copr_of_copr_mul.
 apply in_prod. {
   apply in_coprimes_iff.
@@ -690,9 +679,8 @@ apply in_prod. {
       apply Nat.eq_mul_1 in Hga.
       flia Hga H2m.
     } {
-      (*rewrite Nat.add_comm, Nat.sub_add; [ | flia Hmz ].*)
-      assert (a mod m < m) by now apply Nat.mod_upper_bound.
-      flia H.
+      rewrite Nat.add_comm, Nat.sub_add; [ | flia Hmz ].
+      now apply Nat.mod_upper_bound.
     }
   } {
     rewrite Nat.gcd_comm, Nat.gcd_mod; [ | easy ].
@@ -726,8 +714,8 @@ apply in_prod. {
       apply Nat.eq_mul_1 in Hga.
       flia Hga H2n.
     } {
-      assert (a mod n < n) by now apply Nat.mod_upper_bound.
-      flia H.
+      rewrite Nat.add_comm, Nat.sub_add; [ | flia Hnz ].
+      now apply Nat.mod_upper_bound.
     }
   } {
     rewrite Nat.gcd_comm, Nat.gcd_mod; [ | easy ].
