@@ -1,1 +1,1 @@
-# Asymptotic Upper Bound of Euler Totient Function φ
+# Asymptotic Lower Bound of Euler Totient Function φ
