@@ -542,8 +542,8 @@ Qed.
 
 (* Euler's totient function *)
 
-Definition coprimes n := filter (λ d, Nat.gcd n d =? 1) (seq 1 (n - 1)).
-Definition φ n := length (coprimes n).
+Definition coprimes' n := filter (λ d, Nat.gcd n d =? 1) (seq 1 (n - 1)).
+Definition φ' n := length (coprimes' n).
 
 (* Totient function is multiplicative *)
 
@@ -633,8 +633,8 @@ Definition copr_mul_of_prod_copr (m n : nat) '((x, y) : nat * nat) :=
   let '(u, v) := snd (gcd_and_bezout m n) in
   m * n - (n * x * v + m * (n - 1) * y * u) mod (m * n).
 
-Theorem in_coprimes_iff : ∀ n a,
-  a ∈ seq 1 (n - 1) ∧ Nat.gcd n a = 1 ↔ a ∈ coprimes n.
+Theorem in_coprimes'_iff : ∀ n a,
+  a ∈ seq 1 (n - 1) ∧ Nat.gcd n a = 1 ↔ a ∈ coprimes' n.
 Proof.
 intros.
 split; intros Ha. {
@@ -651,22 +651,22 @@ Qed.
 Theorem prod_copr_of_copr_mul_in_prod : ∀ m n a,
   2 ≤ m
   → 2 ≤ n
-  → a ∈ coprimes (m * n)
+  → a ∈ coprimes' (m * n)
   → prod_copr_of_copr_mul m n a ∈
-       list_prod (coprimes m) (coprimes n).
+       list_prod (coprimes' m) (coprimes' n).
 Proof.
 intros * H2m H2n Ha.
 destruct (Nat.eq_dec m 0) as [Hmz| Hmz]; [ now subst m | ].
 destruct (Nat.eq_dec n 0) as [Hnz| Hnz]. {
   now subst n; rewrite Nat.mul_0_r in Ha.
 }
-apply in_coprimes_iff in Ha.
+apply in_coprimes'_iff in Ha.
 destruct Ha as (Ha, Hga).
 apply in_seq in Ha.
 rewrite Nat.add_comm, Nat.sub_add in Ha by flia Ha.
 unfold prod_copr_of_copr_mul.
 apply in_prod. {
-  apply in_coprimes_iff.
+  apply in_coprimes'_iff.
   split. {
     apply in_seq.
     split. {
@@ -700,7 +700,7 @@ apply in_prod. {
     flia Hga.
   }
 } {
-  apply in_coprimes_iff.
+  apply in_coprimes'_iff.
   rewrite Nat.mul_comm in Hga.
   split. {
     apply in_seq.
@@ -737,11 +737,11 @@ apply in_prod. {
 }
 Qed.
 
-Theorem copr_mul_of_prod_copr_in_coprimes : ∀ m n,
+Theorem copr_mul_of_prod_copr_in_coprimes' : ∀ m n,
   2 ≤ m
   → Nat.gcd m n = 1
-  → ∀ a, a ∈ list_prod (coprimes m) (coprimes n)
-  → copr_mul_of_prod_copr m n a ∈ coprimes (m * n).
+  → ∀ a, a ∈ list_prod (coprimes' m) (coprimes' n)
+  → copr_mul_of_prod_copr m n a ∈ coprimes' (m * n).
 Proof.
 intros m n H2m Hmn (a, b) Hab.
 destruct (Nat.eq_dec m 0) as [Hmz| Hmz]; [ now subst m | ].
@@ -751,8 +751,8 @@ destruct (Nat.eq_dec n 0) as [Hnz| Hnz]. {
 }
 apply in_prod_iff in Hab.
 destruct Hab as (Ha, Hb).
-apply in_coprimes_iff in Ha.
-apply in_coprimes_iff in Hb.
+apply in_coprimes'_iff in Ha.
+apply in_coprimes'_iff in Hb.
 destruct Ha as (Ha, Hma).
 destruct Hb as (Hb, Hnb).
 move Hb before Ha.
@@ -766,7 +766,7 @@ symmetry in Hgb.
 destruct gb as (g & u & v); cbn.
 specialize (gcd_and_bezout_prop m n g u v Hmz Hgb) as (Hmng & Hg).
 rewrite Hmn in Hg; subst g.
-apply in_coprimes_iff.
+apply in_coprimes'_iff.
 assert (Hnmz : (n * a * v + m * (n - 1) * b * u) mod (m * n) ≠ 0). {
   rewrite Nat.mod_mul_r; [ | easy | easy ].
   do 2 rewrite <- (Nat.mul_assoc m).
@@ -947,7 +947,7 @@ rewrite Nat.add_comm, Nat.mod_add; [ | easy ].
 now rewrite Nat.mod_small.
 Qed.
 
-Theorem coprimes_mul_prod_coprimes : ∀ m n,
+Theorem coprimes'_mul_prod_coprimes' : ∀ m n,
   m ≠ 0
   → n ≠ 0
   → Nat.gcd m n = 1
@@ -1063,7 +1063,7 @@ rewrite Nat_sub_sub_distr. 2: {
 now rewrite Nat.sub_diag.
 Qed.
 
-Theorem prod_coprimes_coprimes_mul_prod : ∀ m n,
+Theorem prod_coprimes'_coprimes'_mul_prod : ∀ m n,
   n ≠ 0
   → Nat.gcd m n = 1
   → ∀ x y, x < m → y < n
@@ -1249,19 +1249,19 @@ f_equal. {
 }
 Qed.
 
-Theorem φ_multiplicative : ∀ m n,
+Theorem φ'_multiplicative : ∀ m n,
   2 ≤ m
   → 2 ≤ n
   → Nat.gcd m n = 1
-  → φ (m * n) = φ m * φ n.
+  → φ' (m * n) = φ' m * φ' n.
 Proof.
 intros * H2m H2n Hg.
-unfold φ.
+unfold φ'.
 rewrite <- prod_length.
 apply
   (bijection_same_length (prod_copr_of_copr_mul m n)
      (copr_mul_of_prod_copr m n)). {
-  unfold coprimes.
+  unfold coprimes'.
   apply NoDup_filter, seq_NoDup.
 } {
   apply NoDup_prod; apply NoDup_filter, seq_NoDup.
@@ -1270,16 +1270,16 @@ apply
   now apply prod_copr_of_copr_mul_in_prod.
 } {
   intros b Hb.
-  now apply copr_mul_of_prod_copr_in_coprimes.
+  now apply copr_mul_of_prod_copr_in_coprimes'.
 } {
   intros a Ha.
-  apply coprimes_mul_prod_coprimes; [ flia H2m | flia H2n | easy | ].
+  apply coprimes'_mul_prod_coprimes'; [ flia H2m | flia H2n | easy | ].
   now apply filter_In in Ha.
 } {
   intros (x, y) Hxy.
   apply in_prod_iff in Hxy.
   destruct Hxy as (Hx, Hy).
-  apply prod_coprimes_coprimes_mul_prod; [ flia H2n | easy | | ]. {
+  apply prod_coprimes'_coprimes'_mul_prod; [ flia H2n | easy | | ]. {
     apply filter_In in Hx.
     destruct Hx as (Hx, _).
     apply in_seq in Hx.
@@ -1297,20 +1297,20 @@ Qed.
 
 Require Import Primes.
 
-Theorem different_coprimes_all_different_multiples : ∀ n a,
-  a ∈ coprimes n
+Theorem different_coprimes'_all_different_multiples : ∀ n a,
+  a ∈ coprimes' n
   → ∀ i j,
-  i ∈ coprimes n
-  → j ∈ coprimes n
+  i ∈ coprimes' n
+  → j ∈ coprimes' n
   → i ≠ j
   → (i * a) mod n ≠ (j * a) mod n.
 Proof.
 (* like smaller_than_prime_all_different_multiples but more general *)
 intros * Ha * Hi Hj Hij.
 intros Haa; symmetry in Haa.
-apply in_coprimes_iff in Ha.
-apply in_coprimes_iff in Hi.
-apply in_coprimes_iff in Hj.
+apply in_coprimes'_iff in Ha.
+apply in_coprimes'_iff in Hi.
+apply in_coprimes'_iff in Hj.
 destruct Ha as (Ha, Hna).
 destruct Hi as (Hi, Hni).
 destruct Hj as (Hj, Hnj).
@@ -1335,18 +1335,18 @@ destruct (lt_dec i j) as [Hilj| Hjli]. {
 }
 Qed.
 
-Theorem coprimes_mul_in_coprimes : ∀ n i j,
-  i ∈ coprimes n → j ∈ coprimes n → (i * j) mod n ∈ coprimes n.
+Theorem coprimes'_mul_in_coprimes' : ∀ n i j,
+  i ∈ coprimes' n → j ∈ coprimes' n → (i * j) mod n ∈ coprimes' n.
 Proof.
 intros * Hi Hj.
 destruct (Nat.eq_dec n 0) as [Hnz| Hnz]; [ now subst n | ].
-apply in_coprimes_iff in Hi.
-apply in_coprimes_iff in Hj.
+apply in_coprimes'_iff in Hi.
+apply in_coprimes'_iff in Hj.
 destruct Hi as (Hi, Hgi).
 destruct Hj as (Hj, Hgj).
 apply in_seq in Hi.
 apply in_seq in Hj.
-apply in_coprimes_iff.
+apply in_coprimes'_iff.
 split. {
   apply in_seq.
   split. {
@@ -1371,22 +1371,22 @@ split. {
 }
 Qed.
 
-Theorem NoDup_coprimes : ∀ n, NoDup (coprimes n).
+Theorem NoDup_coprimes' : ∀ n, NoDup (coprimes' n).
 Proof.
 intros.
-unfold coprimes.
+unfold coprimes'.
 apply NoDup_filter, seq_NoDup.
 Qed.
 
-Theorem gcd_prod_coprimes : ∀ n,
-  Nat.gcd n (fold_left Nat.mul (coprimes n) 1) = 1.
+Theorem gcd_prod_coprimes' : ∀ n,
+  Nat.gcd n (fold_left Nat.mul (coprimes' n) 1) = 1.
 Proof.
 intros.
-assert (H : ∀ a, a ∈ coprimes n → Nat.gcd n a = 1). {
+assert (H : ∀ a, a ∈ coprimes' n → Nat.gcd n a = 1). {
   intros * H.
-  now apply in_coprimes_iff in H.
+  now apply in_coprimes'_iff in H.
 }
-remember (coprimes n) as l eqn:Hl; symmetry in Hl; clear Hl.
+remember (coprimes' n) as l eqn:Hl; symmetry in Hl; clear Hl.
 induction l as [| a l]; intros; [ apply Nat.gcd_1_r | ].
 cbn; rewrite Nat.add_0_r.
 rewrite fold_left_mul_from_1.
@@ -1397,13 +1397,13 @@ now apply H; right.
 Qed.
 
 Theorem euler_fermat_little : ∀ n a,
-  n ≠ 0 → a ≠ 0 → Nat.gcd a n = 1 → a ^ φ n ≡ 1 mod n.
+  n ≠ 0 → a ≠ 0 → Nat.gcd a n = 1 → a ^ φ' n ≡ 1 mod n.
 Proof.
 intros * Hnz Haz Hg.
 (* https://wstein.org/edu/2007/spring/ent/ent-html/node19.html#sec:flittle *)
 destruct (Nat.eq_dec n 1) as [Hn1| Hn1]; [ now subst n | ].
-assert (Ha : a mod n ∈ coprimes n). {
-  apply in_coprimes_iff.
+assert (Ha : a mod n ∈ coprimes' n). {
+  apply in_coprimes'_iff.
   rewrite Nat.gcd_comm, Nat.gcd_mod; [ | easy ].
   rewrite Nat.gcd_comm.
   split; [ | easy ].
@@ -1423,22 +1423,22 @@ assert (Ha : a mod n ∈ coprimes n). {
 }
 rewrite <- Nat_mod_pow_mod.
 assert
-  (H1 : ∀ i j, i ∈ coprimes n → j ∈ coprimes n
+  (H1 : ∀ i j, i ∈ coprimes' n → j ∈ coprimes' n
    → i ≠ j → (i * a) mod n ≠ (j * a) mod n). {
   intros * Hi Hj Hij.
   rewrite <- (Nat.mul_mod_idemp_r i); [ | easy ].
   rewrite <- (Nat.mul_mod_idemp_r j); [ | easy ].
-  now apply different_coprimes_all_different_multiples.
+  now apply different_coprimes'_all_different_multiples.
 }
-assert (Hcc : ∀ i, i ∈ coprimes n → (i * a) mod n ∈ coprimes n). {
+assert (Hcc : ∀ i, i ∈ coprimes' n → (i * a) mod n ∈ coprimes' n). {
   intros i Hi.
   rewrite <- Nat.mul_mod_idemp_r; [ | easy ].
-  now apply coprimes_mul_in_coprimes.
+  now apply coprimes'_mul_in_coprimes'.
 }
 assert
   (Hperm :
-     Permutation (map (λ i, (i * a) mod n) (coprimes n)) (coprimes n)). {
-  apply NoDup_Permutation_bis; [ | apply NoDup_coprimes | | ]; cycle 1. {
+     Permutation (map (λ i, (i * a) mod n) (coprimes' n)) (coprimes' n)). {
+  apply NoDup_Permutation_bis; [ | apply NoDup_coprimes' | | ]; cycle 1. {
     now rewrite map_length.
   } {
     intros i Hi.
@@ -1446,15 +1446,15 @@ assert
     destruct Hi as (j & Hji & Hj).
     rewrite <- Hji.
     rewrite <- Nat.mul_mod_idemp_r; [ | easy ].
-    now apply coprimes_mul_in_coprimes.
+    now apply coprimes'_mul_in_coprimes'.
   } {
     apply NoDup_map_iff with (d := 0).
     intros * Hi Hj Hnth.
     destruct (Nat.eq_dec i j) as [Heij| Heij]; [ easy | exfalso ].
     revert Hnth.
     apply H1; [ now apply nth_In | now apply nth_In | ].
-    specialize (NoDup_coprimes n) as H2.
-    remember (coprimes n) as l.
+    specialize (NoDup_coprimes' n) as H2.
+    remember (coprimes' n) as l.
     clear - Hi Hj Heij H2.
     revert i j Hi Hj Heij.
     induction l as [| a l]; intros; [ easy | ].
@@ -1483,13 +1483,13 @@ assert
   }
 }
 remember (λ i : nat, (i * a) mod n) as f eqn:Hf.
-remember (fold_left Nat.mul (map f (coprimes n)) 1) as x eqn:Hx.
-remember (fold_left Nat.mul (coprimes n) 1) as y eqn:Hy.
+remember (fold_left Nat.mul (map f (coprimes' n)) 1) as x eqn:Hx.
+remember (fold_left Nat.mul (coprimes' n) 1) as y eqn:Hy.
 assert (Hx1 : x mod n = y mod n). {
   subst x y.
   erewrite Permutation_fold_mul; [ easy | apply Hperm ].
 }
-assert (Hx2 : x mod n = (y * a ^ φ n) mod n). {
+assert (Hx2 : x mod n = (y * a ^ φ' n) mod n). {
   subst x y; rewrite Hf.
   rewrite <- (map_map (λ i, i * a) (λ j, j mod n)).
   rewrite fold_left_mul_map_mod.
@@ -1499,16 +1499,16 @@ rewrite Hx2 in Hx1.
 replace y with (y * 1) in Hx1 at 2 by flia.
 apply Nat_mul_mod_cancel_l in Hx1. 2: {
   rewrite Hy, Nat.gcd_comm.
-  apply gcd_prod_coprimes.
+  apply gcd_prod_coprimes'.
 }
 now rewrite Nat_mod_pow_mod.
 Qed.
 
-Theorem prime_φ : ∀ p, prime p → φ p = p - 1.
+Theorem prime_φ' : ∀ p, prime p → φ' p = p - 1.
 Proof.
 intros * Hp.
-unfold φ.
-unfold coprimes.
+unfold φ'.
+unfold coprimes'.
 rewrite (filter_ext_in _ (λ d, true)). 2: {
   intros a Ha.
   apply Nat.eqb_eq.
@@ -1532,7 +1532,7 @@ Corollary fermat_little_again : ∀ p,
   prime p → ∀ a, 1 ≤ a < p → a ^ (p - 1) mod p = 1.
 Proof.
 intros * Hp * Hap.
-rewrite <- prime_φ; [ | easy ].
+rewrite <- prime_φ'; [ | easy ].
 replace 1 with (1 mod p). 2: {
   apply Nat.mod_1_l.
   now apply prime_ge_2.

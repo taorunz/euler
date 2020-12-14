@@ -6,14 +6,14 @@ Import List List.ListNotations.
 Require Import Misc Primes.
 Require Import Totient.
 
-Theorem prime_pow_φ : ∀ p, prime p →
-  ∀ k, k ≠ 0 → φ (p ^ k) = p ^ (k - 1) * φ p.
+Theorem prime_pow_φ' : ∀ p, prime p →
+  ∀ k, k ≠ 0 → φ' (p ^ k) = p ^ (k - 1) * φ' p.
 Proof.
 intros * Hp * Hk.
-rewrite (prime_φ p); [ | easy ].
+rewrite (prime_φ' p); [ | easy ].
 destruct (Nat.eq_dec p 0) as [Hpz| Hpz]; [ now subst p | ].
-unfold φ.
-unfold coprimes.
+unfold φ'.
+unfold coprimes'.
 rewrite (filter_ext_in _ (λ d, negb (d mod p =? 0))). 2: {
   intros a Ha.
   apply in_seq in Ha.
