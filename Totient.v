@@ -43,5 +43,43 @@ Theorem φ_multiplicative :
         Nat.gcd m n = 1 →
         φ (m * n) = φ m * φ n.
 Proof.
-    
+    intros.
+    destruct (Nat.leb_spec 2 m).
+    destruct (Nat.leb_spec 2 n).
+    -   assert (2 ≤ m * n) by flia H0 H1.
+        repeat rewrite φ_φ' by assumption.
+        rewrite φ'_multiplicative by assumption.
+        reflexivity.
+    -   destruct n. rewrite Nat.gcd_0_r in H.
+        flia H H0. replace n with 0 by flia H1.
+        cbn. rewrite mult_1_r. rewrite mult_1_r.
+        reflexivity.
+    -   destruct m. rewrite Nat.gcd_0_l in H.
+        rewrite mult_0_l. cbn. reflexivity.
+        replace m with 0 by flia H0.
+        rewrite mult_1_l. cbn. rewrite plus_0_r.
+        reflexivity.
+Qed.
+        
+Theorem prime_pow_φ :
+    ∀ p, prime p →
+        ∀ k, k ≠ 0 → φ (p ^ k) = p ^ (k - 1) * φ p.
+Proof.
+    intros.
+    assert (2 ≤ p ^ k).
+    {
+        apply le_trans with p.
+        apply prime_ge_2.
+        assumption.
+        rewrite <- Nat.pow_1_r at 1.
+        apply Nat.pow_le_mono_r.
+        apply prime_ge_2 in H. flia H.
+        flia H0.
+    }
+    rewrite φ_φ' by assumption.
+    rewrite prime_pow_φ' by assumption.
+    rewrite φ_φ'. reflexivity.
+    apply prime_ge_2. assumption.
+Qed.
+
 

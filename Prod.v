@@ -7,6 +7,14 @@ Arguments prod l /.
 
 Definition pow_in_n n p := count_occ Nat.eq_dec (prime_decomp n) p.
 
+Lemma in_prime_divisors_power_ge_1 :
+    ∀ n p, p ∈ prime_divisors n → 1 ≤ pow_in_n n p.
+Proof.
+    intros. unfold pow_in_n.
+    apply count_occ_In. 
+    apply prime_divisors_decomp. assumption.
+Qed.
+
 Lemma prime_divisors_distinct : ∀ n, NoDup (prime_divisors n).
 Proof.
     intros.
@@ -42,12 +50,22 @@ Theorem φ_prod_pairwise_coprime :
         φ (prod l) = prod (map φ l).
 Proof.
     intros. induction Hpc.
-    - simpl. admit. (* φ 1 = 1 *)
+    - simpl. reflexivity. (* φ 1 = 1 *)
     - simpl in *. repeat rewrite Nat.add_0_r. 
       rewrite fold_left_mul_from_1.
       rewrite fold_left_mul_from_1 with (φ x) _.
       rewrite φ_multiplicative. rewrite IHHpc. reflexivity.
-Admitted.
+      clear - Hpc Hxlc.
+      induction l.
+      + simpl. apply Nat.gcd_1_r.
+      + simpl. rewrite plus_0_r. replace a with (1 * a) by flia.
+        rewrite <- List_fold_left_mul_assoc.
+        rewrite Nat_gcd_1_mul_r. flia.
+        inversion Hpc. apply IHl.
+        --  intros. apply Hxlc. now right.
+        --  assumption.
+        --  apply Hxlc. now left.
+Qed. 
 
 Lemma prime_divisors_aux :
     ∀ n a, a ∈ prime_divisors n ->
@@ -56,8 +74,33 @@ Proof.
     intros. split.
     apply in_prime_decomp_is_prime with n.
     apply prime_divisors_decomp. assumption.
-    unfold pow_in_n. apply count_occ_In. 
-    apply prime_divisors_decomp. assumption.
+    apply in_prime_divisors_power_ge_1 in H.
+    flia H.
+Qed.
+
+Lemma diff_prime_power_coprime :
+    ∀ x y px py,
+        prime x → prime y → 1 ≤ px → 1 ≤ py → Nat.gcd (x ^ px) (y ^ py) = 1.
+Admitted.
+
+Lemma prime_power_pairwise_coprime :
+    ∀ l (f : nat → nat) (HND : NoDup l) (Hprime : ∀ x, x ∈ l → prime x)
+        (Hf : ∀ x, x ∈ l → 1 ≤ f x),
+        pairwise_coprime (map (λ x, x ^ f x) l).
+Proof.
+    intros. induction l.
+    - simpl. constructor.
+    - simpl. constructor.
+      + intros. rewrite in_map_iff in H.
+        destruct H as (x & H1 & H2). subst.
+        apply diff_prime_power_coprime.
+        apply Hprime. now left.
+        apply Hprime. now right.
+        apply Hf. now left.
+        apply Hf. now right.
+      + apply IHl. inversion HND. assumption.
+        intros. apply Hprime. now right.
+        intros. apply Hf. now right.
 Qed.
 
 Theorem φ_prime_divisors_power :
@@ -74,6 +117,10 @@ Proof.
       assert (pow_in_n n a ≠ 0) by flia H1.
       rewrite prime_pow_φ by assumption.
       rewrite prime_φ by assumption. reflexivity.
-    - admit.
-Admitted.
+    - apply prime_power_pairwise_coprime.
+      apply prime_divisors_distinct.
+      intros. apply prime_divisors_decomp in H0.
+      apply in_prime_decomp_is_prime with n. assumption.
+      apply in_prime_divisors_power_ge_1.
+Qed.
       
