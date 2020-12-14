@@ -4,7 +4,7 @@ Set Nested Proofs Allowed.
 Require Import Utf8 Arith.
 Import List List.ListNotations.
 Require Import Misc Primes.
-Require Import Totient.
+Require Import PTotient.
 
 Theorem prime_pow_φ' : ∀ p, prime p →
   ∀ k, k ≠ 0 → φ' (p ^ k) = p ^ (k - 1) * φ' p.
