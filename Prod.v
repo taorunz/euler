@@ -1,3 +1,5 @@
+(* Product formula of φ *)
+
 Require Import Utf8 Arith.
 Import List List.ListNotations.
 Require Import Psatz Misc Primes Totient Primisc.
