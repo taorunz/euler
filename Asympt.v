@@ -10,7 +10,7 @@ Require Import Interval.Tactic.
 φ n / n = prod[p | n] (1 - 1 / p)
 = exp sum[p | n] ln (1 - 1 / p)
 ≥ exp sum[p | n] -2 (1/p)
-≥ exp sum[i ∈ [log n]] -2 (1/i)
+≥ exp sum[i ∈ [Nat.log2 n]] -2 (1/i)
 ≥ exp -O(log log n)
 = 1 / O(log n)
 *)
@@ -27,6 +27,13 @@ Proof.
     interval with (i_autodiff x).
 Qed.
 
+Theorem φ_lower_bound :
+    ∃ (N0 : nat) (c : R),
+        (∀ n, N0 ≤ n → φ n / n >= c / Nat.log2 n) ∧ c > 0.
+Proof.
+    esplit. esplit. split.
+    intros. 
+    rewrite <- (prime_divisor_pow_prod n) at 2.
+    rewrite φ_prime_divisors_power.
 
-
-
+Admitted.
