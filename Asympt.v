@@ -22,6 +22,9 @@ Coercion INR : nat >-> R.
 Definition Rprod (l : list R) := fold_left Rmult l 1.
 Arguments Rprod l /.
 
+Definition Rsum (l : list R) := fold_left Rplus l 0.
+Arguments Rsum l /.
+
 Lemma fold_left_Rmult_from_1 :
     ∀ a l, fold_left Rmult l a = a * fold_left Rmult l 1.
 Proof.
@@ -31,12 +34,65 @@ Proof.
       rewrite IHl with (1 * a). ring.
 Qed.
 
+Lemma fold_left_Rmult_from_a :
+    ∀ a b l, fold_left Rmult l (a * b) = b * fold_left Rmult l a.
+Proof.
+    intros. revert a. induction l.
+    - intros. simpl. ring.
+    - intros. simpl. 
+      replace (a0 * b * a) with (a0 * a * b) by lra.
+      rewrite IHl. ring.
+Qed.
+
+Lemma fold_left_Rplus_from_0 :
+    ∀ a l, fold_left Rplus l a = a + fold_left Rplus l 0.
+Proof.
+    intros. revert a. induction l.
+    - intros. simpl. ring.
+    - intros. simpl. rewrite IHl.
+      rewrite IHl with (0 + a). ring.
+Qed.
+
+Lemma fold_left_Rplus_from_a :
+    ∀ a b l, fold_left Rplus l (a + b) = b + fold_left Rplus l a.
+Proof.
+    intros. revert a. induction l.
+    - intros. simpl. ring.
+    - intros. simpl.
+      replace (a0 + b + a) with (a0 + a + b) by lra.
+      rewrite IHl. reflexivity.
+Qed.
+
+Lemma fold_left_Rplus_gt_0 :
+    ∀ {T} (l : list T) (g : T → R) (a : R),
+        (a >= 0) → (l ≠ []) → (∀ x, x ∈ l → g x > 0) →
+        fold_left Rplus (map g l) a > 0.
+Proof.
+    intros. destruct l.
+    - contradict H0. reflexivity.
+    - simpl. clear H0. revert H1. revert l.
+      induction l.
+      + simpl. intros. specialize H1 with t.
+        assert (g t > 0) by auto. lra.
+      + intros. simpl.
+        rewrite fold_left_Rplus_from_a with (a + g t) _ _.
+        assert (∀ x : T, x ∈ t :: l → g x > 0).
+        {
+            intros. apply H1. simpl. destruct H0; auto.
+        }
+        apply IHl in H0.
+        assert (g a0 > 0).
+        {
+            apply H1. simpl. auto.
+        }
+        lra.
+Qed.      
+
 Lemma Rmult_ne_0 :
     ∀ (a b : R) , a * b ≠ 0 ↔ (a ≠ 0 ∧ b ≠ 0).
 Proof.
     intros. split; nra.
 Qed.
-
 
 Lemma fold_left_Rmult_ne_0 :
     ∀ {T} (l : list T) (g : T → R) (a : R),
@@ -91,6 +147,31 @@ Proof.
       specialize H0 with a.
       assert (a ∈ a :: l) by now left. apply H0 in H2.
       lra. lra. intros. apply H0. now right.
+Qed.
+
+Lemma ln_Rprod_Rsum :
+    ∀ l, (l ≠ []) → (∀ x, x ∈ l → 0 < x) → ln (Rprod l) = Rsum (map ln l).
+Proof.
+    intros. destruct l.
+    - simpl. apply ln_1.
+    - simpl. clear H. revert H0. revert l.
+      induction l.
+      + intros. simpl. rewrite Rmult_1_l. rewrite Rplus_0_l. reflexivity.
+      + intros. simpl.
+        rewrite Rmult_1_l, Rplus_0_l in *.
+        rewrite fold_left_Rplus_from_a.
+        rewrite fold_left_Rmult_from_a.
+        rewrite ln_mult. rewrite IHl. reflexivity.
+        intros. apply H0. destruct H. now left.
+        right. now right.
+        apply H0. right. left. reflexivity.
+        apply Rgt_lt.
+        replace l with (map id l).
+        apply fold_left_Rmult_gt_0.
+        apply Rlt_gt. apply H0. left. reflexivity.
+        intros. unfold id. apply Rlt_gt. apply H0. right.
+        right. assumption.
+        clear. induction l. reflexivity. simpl. rewrite IHl. reflexivity.
 Qed.
 
 Theorem prod_INR_Rprod :
@@ -177,13 +258,39 @@ Proof.
     rewrite Rprod_div. 
     rewrite map_ext_in with _ _ _ (λ x : nat, (x - 1) / x) _.
     rewrite <- exp_ln with (Rprod _).
+    rewrite ln_Rprod_Rsum.
+    rewrite map_map.
+    (* side conditions *)
+    - admit.
     - admit.
     - apply Rgt_lt. apply fold_left_Rmult_gt_0.
       lra. intros. rewrite prime_divisors_decomp in H0.
       apply in_prime_decomp_is_prime in H0. apply prime_ge_2 in H0.
       apply le_INR in H0. simpl in *. apply Rdiv_lt_0_compat; lra.
-    - (* need x >= 1 *) admit.
-    - (* need x >= 1 *) admit.
+    - intros. rewrite mult_INR. repeat rewrite pow_INR.
+      rewrite minus_INR. simpl. 
+      replace (pow_in_n n a) with (pow_in_n n a - 1 + 1)%nat at 2.
+      rewrite Rdef_pow_add. rewrite pow_1. field.
+      assert (INR a ≠ 0).
+      {
+        apply prime_divisors_decomp in H0.
+        apply in_prime_decomp_is_prime in H0. apply prime_ge_2 in H0.
+        apply le_INR in H0. simpl in H0. lra.
+      }
+      split. auto. 
+      apply pow_nonzero. auto.
+      specialize in_prime_divisors_power_ge_1 with n a as H1.
+      apply H1 in H0. lia.
+      apply prime_divisors_decomp in H0.
+      apply in_prime_decomp_is_prime in H0. apply prime_ge_2 in H0. lia.
+    - intros. assert (INR x ≠ 0).
+      {
+        apply prime_divisors_decomp in H0.
+        apply in_prime_decomp_is_prime in H0. apply prime_ge_2 in H0.
+        apply le_INR in H0. simpl in H0. lra.
+      }
+      rewrite pow_INR.
+      now apply pow_nonzero.
     - admit.
     - admit.
     - admit. 
