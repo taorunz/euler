@@ -2,8 +2,9 @@
 
 Require Import Utf8 Arith.
 Import List List.ListNotations.
-Require Import Psatz Misc Primes Totient Primisc Prod.
 Require Import Reals.
+
+Require Import Psatz Misc Primes Totient Primisc Prod Harmonic.
 Require Import Interval.Tactic.
 Require Import Logic.FunctionalExtensionality.
 
@@ -16,8 +17,8 @@ Require Import Logic.FunctionalExtensionality.
 = 1 / O(log n)
 *)
 
-Open Scope R_scope.
-Coercion INR : nat >-> R.
+Local Open Scope R_scope.
+Local Coercion INR : nat >-> R.
 
 Definition Rprod (l : list R) := fold_left Rmult l 1.
 Arguments Rprod l /.
@@ -260,6 +261,7 @@ Proof.
     rewrite <- exp_ln with (Rprod _).
     rewrite ln_Rprod_Rsum.
     rewrite map_map.
+    admit.
     (* side conditions *)
     - admit.
     - admit.
@@ -295,3 +297,5 @@ Proof.
     - admit.
     - admit. 
 Admitted.
+
+Local Close Scope R_scope.
