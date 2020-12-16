@@ -1,6 +1,6 @@
 (* Product formula of φ *)
 
-Require Import Utf8 Arith Logic.FunctionalExtensionality.
+Require Import Utf8 Arith.
 Import List List.ListNotations.
 Require Import Psatz Misc Primes Totient Primisc.
 
@@ -87,8 +87,8 @@ Proof.
   simpl. rewrite prod_extend.
   assert (a ∈ l2) by (apply Hocc; constructor; easy).
   specialize (prod_augmented_in l2 a (fun x : nat => x ^ (count_occ Nat.eq_dec l1 x)) H Hdis) as G. simpl in G.
-  replace (λ x : nat, x ^ (if Nat.eq_dec a x then S (count_occ Nat.eq_dec l1 x) else count_occ Nat.eq_dec l1 x)) with (λ x : nat, if a =? x then a * x ^ count_occ Nat.eq_dec l1 x else x ^ count_occ Nat.eq_dec l1 x).
-  2:{ extensionality x.
+  replace (map (λ x : nat, x ^ (if Nat.eq_dec a x then S (count_occ Nat.eq_dec l1 x) else count_occ Nat.eq_dec l1 x)) l2) with (map (λ x : nat, if a =? x then a * x ^ count_occ Nat.eq_dec l1 x else x ^ count_occ Nat.eq_dec l1 x) l2).
+  2:{ apply map_ext. intro x.
       destruct (Nat.eq_dec a x). subst. rewrite Nat.eqb_refl. rewrite Nat.pow_succ_r'. easy.
       apply Nat.eqb_neq in n. rewrite n. easy.
   }
