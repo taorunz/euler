@@ -1,6 +1,6 @@
 (* Product formula of φ *)
 
-Require Import Utf8 Arith.
+Require Import Utf8 Arith Logic.FunctionalExtensionality.
 Import List List.ListNotations.
 Require Import Psatz Misc Primes Totient Primisc.
 
@@ -25,13 +25,78 @@ Proof.
     apply seq_NoDup.
 Qed.
 
+Print count_occ.
+Print NoDup.
+
+Lemma fold_left_Natmul_accum :
+  forall l n,
+    fold_left Nat.mul l n = n * fold_left Nat.mul l 1.
+Proof.
+  induction l; intros. simpl. lia.
+  simpl. rewrite IHl. symmetry. rewrite IHl. lia. 
+Qed.
+
+Lemma prod_extend :
+  forall l a, prod (a :: l) = a * prod l.
+Proof.
+  intros. simpl. rewrite fold_left_Natmul_accum. lia.
+Qed.
+
+Lemma prod_map1 :
+  forall l, prod (map (λ _ : nat, 1) l) = 1.
+Proof.
+  induction l. easy.
+  Local Opaque prod. simpl. rewrite prod_extend. rewrite IHl. lia.
+Qed.
+
+Lemma prod_augmented_not_in :
+  forall l a f,
+    a ∉ l ->
+    NoDup l ->
+    prod (map (fun x => if a =? x then a * f x else f x) l) = prod (map f l).
+Proof.
+  induction l; intros. easy.
+  apply not_in_cons in H. destruct H as [Ha0 Hl].
+  simpl. do 2 rewrite prod_extend. apply Nat.eqb_neq in Ha0. rewrite Ha0.
+  inversion H0; subst. rewrite IHl by easy. lia.
+Qed.
+
+Lemma prod_augmented_in :
+  forall l a f,
+    a ∈ l ->
+    NoDup l ->
+    prod (map (fun x => if a =? x then a * f x else f x) l) = a * prod (map f l).
+Proof.
+  induction l; intros. inversion H.
+  simpl. do 2 rewrite prod_extend.
+  inversion H.
+  - rewrite <- H1. inversion H0; subst. rewrite Nat.eqb_refl. 
+    rewrite prod_augmented_not_in by easy. lia.
+  - destruct (a0 =? a) eqn:E. apply Nat.eqb_eq in E. inversion H0; subst. easy.
+    apply Nat.eqb_neq in E. inversion H0; subst. rewrite IHl by easy. lia.
+Qed.
+
 Theorem prod_by_occ :
     forall (l1 l2 : list nat)
         (Hocc : forall x, x ∈ l1 -> x ∈ l2)
         (Hdis : NoDup l2),
     prod l1 = 
-    prod (map (fun x => x ^ (count_occ Nat.eq_dec l1 x)) l2). 
-Admitted.
+    prod (map (fun x => x ^ (count_occ Nat.eq_dec l1 x)) l2).
+Proof.
+  induction l1; intros. simpl. rewrite prod_map1. easy.
+  simpl. rewrite prod_extend.
+  assert (a ∈ l2) by (apply Hocc; constructor; easy).
+  specialize (prod_augmented_in l2 a (fun x : nat => x ^ (count_occ Nat.eq_dec l1 x)) H Hdis) as G. simpl in G.
+  replace (λ x : nat, x ^ (if Nat.eq_dec a x then S (count_occ Nat.eq_dec l1 x) else count_occ Nat.eq_dec l1 x)) with (λ x : nat, if a =? x then a * x ^ count_occ Nat.eq_dec l1 x else x ^ count_occ Nat.eq_dec l1 x).
+  2:{ extensionality x.
+      destruct (Nat.eq_dec a x). subst. rewrite Nat.eqb_refl. rewrite Nat.pow_succ_r'. easy.
+      apply Nat.eqb_neq in n. rewrite n. easy.
+  }
+  rewrite G. rewrite IHl1 with (l2 := l2); try easy.
+  intros. apply Hocc. right. easy.
+Qed.
+
+Local Transparent prod.
 
 Theorem prime_divisor_pow_prod :
     ∀ n, n ≠ 0 → prod (map (fun x => x ^ (pow_in_n n x)) (prime_divisors n)) = n.
@@ -80,14 +145,34 @@ Proof.
     flia H.
 Qed.
 
+Lemma Nat_gcd_1_pow_l :
+  forall pa a b,
+    Nat.gcd a b = 1 ->
+    Nat.gcd (a^pa) b = 1.
+Proof.
+  induction pa; intros. easy.
+  simpl. apply Nat_gcd_1_mul_l. easy. apply IHpa. easy.
+Qed.
+
+Lemma Nat_gcd_1_pow :
+  forall a b pa pb,
+    Nat.gcd a b = 1 ->
+    Nat.gcd (a^pa) (b^pb) = 1.
+Proof.
+  intros. specialize (Nat_gcd_1_pow_l pa a b H) as G. rewrite Nat.gcd_comm in G.
+  rewrite Nat.gcd_comm. apply Nat_gcd_1_pow_l. easy.
+Qed.
+
 Lemma diff_prime_power_coprime :
-    ∀ x y px py,
-        prime x → prime y → 1 ≤ px → 1 ≤ py → Nat.gcd (x ^ px) (y ^ py) = 1.
-Admitted.
+  ∀ x y px py,
+    x <> y -> prime x → prime y →
+    Nat.gcd (x ^ px) (y ^ py) = 1.
+Proof.
+  intros. apply Nat_gcd_1_pow. apply eq_primes_gcd_1; easy.
+Qed.
 
 Lemma prime_power_pairwise_coprime :
-    ∀ l (f : nat → nat) (HND : NoDup l) (Hprime : ∀ x, x ∈ l → prime x)
-        (Hf : ∀ x, x ∈ l → 1 ≤ f x),
+    ∀ l (f : nat → nat) (HND : NoDup l) (Hprime : ∀ x, x ∈ l → prime x),
         pairwise_coprime (map (λ x, x ^ f x) l).
 Proof.
     intros. induction l.
@@ -96,13 +181,13 @@ Proof.
       + intros. rewrite in_map_iff in H.
         destruct H as (x & H1 & H2). subst.
         apply diff_prime_power_coprime.
+        inversion HND; subst.
+        destruct (x =? a) eqn:E. apply Nat.eqb_eq in E. subst. easy.
+        apply Nat.eqb_neq in E. lia.
         apply Hprime. now left.
         apply Hprime. now right.
-        apply Hf. now left.
-        apply Hf. now right.
       + apply IHl. inversion HND. assumption.
         intros. apply Hprime. now right.
-        intros. apply Hf. now right.
 Qed.
 
 Theorem φ_prime_divisors_power :
@@ -123,6 +208,5 @@ Proof.
       apply prime_divisors_distinct.
       intros. apply prime_divisors_decomp in H0.
       apply in_prime_decomp_is_prime with n. assumption.
-      apply in_prime_divisors_power_ge_1.
 Qed.
       

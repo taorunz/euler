@@ -34,12 +34,24 @@ Definition List_combine_all {A} (l1 l2 : list A) (d : A) :=
   List.combine l'1 l'2.
 
 Theorem filter_ext_in {A : Type} : forall (f g : A -> bool) (l : list A),
-  (forall a, a ∈ l -> f a = g a) -> filter f l = filter g l.
-Admitted.
+    (forall a, a ∈ l -> f a = g a) -> filter f l = filter g l.
+Proof.
+  intros f g l. induction l; intros. easy.
+  assert (forall a : A, a ∈ l -> f a = g a).
+  { intros x Hx. apply H. simpl. right. easy.
+  }
+  assert (f a = g a).
+  { apply H. simpl. left. easy.
+  }
+  simpl. rewrite IHl by easy. destruct (f a); rewrite <- H1; easy.
+Qed.
 
 Lemma filter_app {A : Type} (f : A -> bool) (l l' : list A) :
-    filter f (l ++ l') = filter f l ++ filter f l'.
-Admitted.
+  filter f (l ++ l') = filter f l ++ filter f l'.
+Proof.
+  induction l. simpl. easy.
+  simpl. rewrite IHl. destruct (f a); easy.
+Qed.  
 
 Theorem List_cons_app A (a : A) l : a :: l = [a] ++ l.
 Proof. easy. Qed.
