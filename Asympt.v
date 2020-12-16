@@ -175,6 +175,22 @@ Proof.
         clear. induction l. reflexivity. simpl. rewrite IHl. reflexivity.
 Qed.
 
+Lemma Rsum_map_le :
+    ∀ l f g (Hle : ∀ x : nat, x ∈ l → f x <= g x),
+        Rsum (map f l) <= Rsum (map g l).
+Proof.
+    intros. induction l.
+    - simpl. lra.
+    - simpl in *. repeat rewrite Rplus_0_l.
+      rewrite fold_left_Rplus_from_0.
+      rewrite fold_left_Rplus_from_0 with (g a) _.
+      assert (f a <= g a).
+      { apply Hle. now left. }
+      assert (fold_left Rplus (map f l) 0 <= fold_left Rplus (map g l) 0).
+      { apply IHl. intros. apply Hle. now right. }
+      lra.
+Qed.
+
 Theorem prod_INR_Rprod :
     ∀ (l : list nat), INR (prod l) = Rprod (map INR l).
 Proof.
@@ -246,6 +262,25 @@ Proof.
       apply H0. apply H0.
 Qed.
 
+Lemma Rsum_increasing_f :
+    ∀ (l1 l2 : list nat) (f : nat → R),
+        (∀ i j, (i ∈ l1 ∨ i ∈ l2) → (j ∈ l1 ∨ j ∈ l2) → i ≤ j → f i <= f j) →
+        (entrywise_le l1 l2) → Rsum (map f l1) <= Rsum (map f l2).
+Proof.
+    intros. induction H0.
+    - lra.
+    - simpl in *. repeat rewrite Rplus_0_l.
+      rewrite fold_left_Rplus_from_0.
+      rewrite fold_left_Rplus_from_0 with (f x2) _.
+      apply H in Hlex; auto.
+      assert (fold_left Rplus (map f l1) 0 <= fold_left Rplus (map f l2) 0).
+      {
+          apply IHentrywise_le. intros.
+          apply H; auto. destruct H1; auto. destruct H2; auto.
+      }
+      lra.
+Qed.
+
 Theorem φ_lower_bound :
     ∃ (N0 : nat) (c : R),
         (∀ n, N0 ≤ n → φ n / n >= c / Nat.log2 n) ∧ c > 0.
@@ -261,9 +296,33 @@ Proof.
     rewrite <- exp_ln with (Rprod _).
     rewrite ln_Rprod_Rsum.
     rewrite map_map.
+    eapply Rge_trans with (exp (Rsum (map (λ x : nat, - 2 / x) (prime_divisors n)))).
+    apply Rle_ge. apply Raux.exp_le. apply Rsum_map_le.
+    intros. replace ((x - 1) / x) with (1 - / x).
+    replace (-2 / x) with (- 2 * (/ x)) by lra.
+    apply Rge_le. apply ln_1_minus_x_ge_minus_2x.
+    cut (2 <= x). intros. interval.
+    replace 2 with (INR (2%nat)) by reflexivity.
+    apply le_INR. apply prime_ge_2. eapply in_prime_decomp_is_prime.
+    apply prime_divisors_decomp. apply H0. field. 
+    apply prime_divisors_decomp in H0.
+    apply in_prime_decomp_is_prime in H0. apply prime_ge_2 in H0.
+    apply le_INR in H0. simpl in H0. lra.
+    rewrite <- exp_ln. apply Rle_ge. apply Raux.exp_le.
+    apply Rge_le. eapply Rge_trans. apply Rle_ge. eapply Rsum_increasing_f.
+    2:{ apply seq_entrywise_le_prime_divisors. }
+    intros. apply le_INR in H2. apply Rminus_le.
+    unfold Rdiv, Rminus. rewrite Ropp_mult_distr_r.
+    rewrite <- Rmult_plus_distr_l. apply Stdlib.Rmult_le_neg_pos; try lra.
+    replace (/ i + - / j) with (/ i - / j) by reflexivity. 
+    apply Rge_le. apply Rge_minus. apply Rle_ge. apply Raux.Rinv_le; auto.
+    admit. (* 0 < i *)
+    
     admit.
     (* side conditions *)
     - admit.
+    - unfold not. intros. apply map_eq_nil in H0.
+      apply prime_divisors_nil_iff in H0. admit.
     - admit.
     - apply Rgt_lt. apply fold_left_Rmult_gt_0.
       lra. intros. rewrite prime_divisors_decomp in H0.
