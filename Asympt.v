@@ -281,11 +281,33 @@ Proof.
       lra.
 Qed.
 
+Lemma Rsum_distr_f :
+    ∀ l f t, Rsum (map (λ x : nat, t * f x) l) = t * Rsum (map f l).
+Proof.
+    intros. induction l.
+    - simpl. rewrite Rmult_0_r. reflexivity.
+    - simpl in *. repeat rewrite Rplus_0_l.
+    rewrite fold_left_Rplus_from_0.
+    rewrite fold_left_Rplus_from_0 with (f a) _.
+    rewrite IHl. rewrite Rmult_plus_distr_l. reflexivity.
+Qed.
+
+Lemma map_in_exists :
+    ∀ {A B: Type} (l : list A) (f : A → B) (x : B), x ∈ map f l → (∃ y, (x = f y) ∧ y ∈ l).
+Proof.
+    intros. induction l.
+    - simpl in H. contradict H.
+    - simpl in *. destruct H.
+      + exists a. split; auto.
+      + apply IHl in H as (y & Hy1 & Hy2). exists y.
+        split; auto.
+Qed.
+
 Theorem φ_lower_bound :
     ∃ (N0 : nat) (c : R),
         (∀ n, N0 ≤ n → φ n / n >= c / Nat.log2 n) ∧ c > 0.
 Proof.
-    esplit. esplit. split.
+    exists 4%nat. exists 0.001. split.
     intros. 
     rewrite <- (prime_divisor_pow_prod n) at 2.
     rewrite φ_prime_divisors_power.
@@ -317,13 +339,33 @@ Proof.
     replace (/ i + - / j) with (/ i - / j) by reflexivity. 
     apply Rge_le. apply Rge_minus. apply Rle_ge. apply Raux.Rinv_le; auto.
     admit. (* 0 < i *)
-    
-    admit.
+    rewrite map_ext_in with _ _ _ (λ x : nat, (-2) * / x) _ by auto.
+    rewrite Rsum_distr_f. 
+    replace (ln (?[c] / Nat.log2 n)) with (-2 * (-/2 * ln (0.001 / Nat.log2 n))). (* 100 can be any constant *)
+    apply Rmult_le_ge_compat_neg_l. lra. eapply Rle_trans.
+    simpl. rewrite map_ext_in with _ _ _ (λ x : nat, 1 / x) _.
+    apply harmonic_upper_bound.
+    intros. unfold Rdiv. lra.
+    eapply Rle_trans. rewrite Rplus_comm.
+    rewrite <- Rcomplements.Rle_minus_r. eapply Rle_trans.
+    apply le_INR. apply Nat.log2_le_mono. apply len_prime_divisors_le_log2.
+    rewrite Rcomplements.Rle_minus_r.
+    apply Rle_refl.
+    admit. (* Nat.log2 (Nat.log2 n) + 1 <= - / 2 * ln (0.001 / Nat.log2 n) *)
+    rewrite <- Rmult_assoc. replace (-2 * - / 2) with 1 by lra.
+    rewrite Rmult_1_l. reflexivity.
     (* side conditions *)
     - admit.
     - unfold not. intros. apply map_eq_nil in H0.
-      apply prime_divisors_nil_iff in H0. admit.
-    - admit.
+      apply prime_divisors_nil_iff in H0. lia.
+    - intros. apply map_in_exists in H0 as (y & Hy0 & Hy1).
+      assert (2 <= y).
+      { replace 2 with (INR 2%nat) by auto. apply le_INR.
+        apply prime_ge_2. eapply in_prime_decomp_is_prime.
+        apply prime_divisors_decomp. apply Hy1.
+      }
+      subst. unfold Rdiv. apply Rmult_lt_0_compat. lra.
+      apply Rinv_0_lt_compat. lra.
     - apply Rgt_lt. apply fold_left_Rmult_gt_0.
       lra. intros. rewrite prime_divisors_decomp in H0.
       apply in_prime_decomp_is_prime in H0. apply prime_ge_2 in H0.
@@ -352,9 +394,9 @@ Proof.
       }
       rewrite pow_INR.
       now apply pow_nonzero.
-    - admit.
-    - admit.
-    - admit. 
+    - lia.
+    - lia.
+    - lra. 
 Admitted.
 
 Local Close Scope R_scope.
