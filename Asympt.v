@@ -303,6 +303,17 @@ Proof.
         split; auto.
 Qed.
 
+Lemma le_seq :
+    ∀ i a b, i ∈ seq a b → a ≤ i.
+Proof.
+    intros. revert H. revert i a.
+    induction b.
+    - simpl. intros. contradict H.
+    - simpl. intros. destruct H.
+      + lia.
+      + apply IHb in H. lia.
+Qed.
+
 Theorem φ_lower_bound :
     ∃ (N0 : nat) (c : R),
         (∀ n, N0 ≤ n → φ n / n >= c / Nat.log2 n) ∧ c > 0.
@@ -338,10 +349,16 @@ Proof.
     rewrite <- Rmult_plus_distr_l. apply Stdlib.Rmult_le_neg_pos; try lra.
     replace (/ i + - / j) with (/ i - / j) by reflexivity. 
     apply Rge_le. apply Rge_minus. apply Rle_ge. apply Raux.Rinv_le; auto.
-    admit. (* 0 < i *)
+    { 
+        replace 0 with (INR 0%nat) by auto.
+      apply lt_INR. destruct H0. apply le_seq in H0.  lia.
+      eapply lt_le_trans with 2%nat. lia. apply prime_ge_2.
+      eapply in_prime_decomp_is_prime. apply prime_divisors_decomp.
+      apply H0.
+    }
     rewrite map_ext_in with _ _ _ (λ x : nat, (-2) * / x) _ by auto.
     rewrite Rsum_distr_f. 
-    replace (ln (?[c] / Nat.log2 n)) with (-2 * (-/2 * ln (0.001 / Nat.log2 n))). (* 100 can be any constant *)
+    replace (ln (?[c] / Nat.log2 n)) with (-2 * (-/2 * ln (0.001 / Nat.log2 n))). (* 0.001 can be any constant *)
     apply Rmult_le_ge_compat_neg_l. lra. eapply Rle_trans.
     simpl. rewrite map_ext_in with _ _ _ (λ x : nat, 1 / x) _.
     apply harmonic_upper_bound.
@@ -355,7 +372,14 @@ Proof.
     rewrite <- Rmult_assoc. replace (-2 * - / 2) with 1 by lra.
     rewrite Rmult_1_l. reflexivity.
     (* side conditions *)
-    - admit.
+    - assert (0 < Nat.log2 n).
+      { replace 0 with (INR 0%nat) by auto. apply lt_INR.
+        eapply Nat.lt_trans. constructor.
+        eapply Nat.lt_le_trans. auto.
+        replace 2%nat with (Nat.log2 4) by auto.
+        apply Nat.log2_le_mono. auto. }
+        unfold Rdiv at 1. apply Rmult_lt_0_compat.
+        lra. apply Rinv_0_lt_compat. auto.
     - unfold not. intros. apply map_eq_nil in H0.
       apply prime_divisors_nil_iff in H0. lia.
     - intros. apply map_in_exists in H0 as (y & Hy0 & Hy1).
