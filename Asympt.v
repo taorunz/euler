@@ -314,6 +314,11 @@ Proof.
       + apply IHb in H. lia.
 Qed.
 
+Lemma final_log_bound :
+    ∀ n, 4 ≤ n →
+    Nat.log2 (Nat.log2 n) + 1 <= - / 2 * ln (0.001 / Nat.log2 n).
+Admitted.
+
 Theorem φ_lower_bound :
     ∃ (N0 : nat) (c : R),
         (∀ n, N0 ≤ n → φ n / n >= c / Nat.log2 n) ∧ c > 0.
@@ -368,7 +373,7 @@ Proof.
     apply le_INR. apply Nat.log2_le_mono. apply len_prime_divisors_le_log2.
     rewrite Rcomplements.Rle_minus_r.
     apply Rle_refl.
-    admit. (* Nat.log2 (Nat.log2 n) + 1 <= - / 2 * ln (0.001 / Nat.log2 n) *)
+    apply final_log_bound. apply H.
     rewrite <- Rmult_assoc. replace (-2 * - / 2) with 1 by lra.
     rewrite Rmult_1_l. reflexivity.
     (* side conditions *)
@@ -421,6 +426,6 @@ Proof.
     - lia.
     - lia.
     - lra. 
-Admitted.
+Qed.
 
 Local Close Scope R_scope.
