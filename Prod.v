@@ -25,8 +25,8 @@ Proof.
     apply seq_NoDup.
 Qed.
 
-Print count_occ.
-Print NoDup.
+(* Print count_occ.
+Print NoDup. *)
 
 Lemma fold_left_Natmul_accum :
   forall l n,
