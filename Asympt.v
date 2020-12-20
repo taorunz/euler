@@ -1,4 +1,4 @@
-(* Asymptotoc bound for φ *)
+(* Asymptotic bound for φ *)
 
 Require Import Utf8 Arith.
 Import List List.ListNotations.
@@ -230,6 +230,13 @@ Qed.
 
 Lemma len_prime_divisors_le_log2 :
     ∀ n, length (prime_divisors n) ≤ Nat.log2 n.
+Proof.
+    intros.
+    destruct n. reflexivity.
+    apply Nat.log2_le_pow2. lia.
+    remember (S n) as m.
+    rewrite <- prime_divisor_pow_prod by lia.
+    simpl. apply prod_le_const.
 Admitted.
 
 Inductive entrywise_le : list nat → list nat → Prop :=
