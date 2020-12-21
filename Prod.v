@@ -36,6 +36,10 @@ Proof.
   simpl. rewrite IHl. symmetry. rewrite IHl. lia. 
 Qed.
 
+Lemma prod_empty :
+  prod [] = 1.
+Proof. easy. Qed.
+
 Lemma prod_extend :
   forall l a, prod (a :: l) = a * prod l.
 Proof.
@@ -94,6 +98,31 @@ Proof.
   }
   rewrite G. rewrite IHl1 with (l2 := l2); try easy.
   intros. apply Hocc. right. easy.
+Qed.
+
+Lemma prod_le :
+  forall {A} (l : list A) f1 f2,
+    (forall a, a ∈ l -> 0 < f1 a <= f2 a) ->
+    prod (map f1 l) <= prod (map f2 l).
+Proof.
+  intro A. induction l; intros. simpl. lia.
+  simpl. do 2 rewrite prod_extend.
+  assert (∀ a0 : A, a0 ∈ l → 0 < f1 a0 ≤ f2 a0) by (intros; apply H; constructor; easy).
+  specialize (IHl _ _ H0).
+  assert (0 < f1 a <= f2 a) by (apply H; constructor; easy).
+  nia.
+Qed.  
+
+Lemma prod_const_f :
+  forall {A} (l : list A) f c,
+    (forall a, a ∈ l -> f a = c) ->
+    prod (map f l) = c^(length l).
+Proof.
+  intro A. induction l; intros. simpl. apply prod_empty.
+  simpl. rewrite prod_extend. rewrite IHl with (c := c).
+  rewrite H. easy.
+  constructor; easy.
+  intros. apply H. constructor; easy.
 Qed.
 
 Local Transparent prod.
@@ -209,4 +238,3 @@ Proof.
       intros. apply prime_divisors_decomp in H0.
       apply in_prime_decomp_is_prime with n. assumption.
 Qed.
-      

@@ -4,7 +4,7 @@ Require Import Utf8 Arith.
 Import List List.ListNotations.
 Require Import Reals.
 
-Require Import Psatz Misc Primes Totient Primisc Prod Harmonic.
+Require Import Psatz Misc Primes Totient Primisc Prod Harmonic Log.
 Require Import Interval.Tactic.
 Require Import Logic.FunctionalExtensionality.
 
@@ -236,16 +236,69 @@ Proof.
     apply Nat.log2_le_pow2. lia.
     remember (S n) as m.
     rewrite <- prime_divisor_pow_prod by lia.
-    simpl. apply prod_le_const.
-Admitted.
+    rewrite <- prod_const_f with (f := (fun _ => 2%nat)) by (intros; easy).
+    apply prod_le. intros.
+    specialize (in_prime_divisors_power_ge_1 _ _ H) as G.
+    apply prime_divisors_decomp in H.
+    specialize (in_prime_decomp_ge_2 _ _ H) as T.
+    split. lia.
+    assert (a ^ 1 <= a ^ (pow_in_n m a))%nat by (apply Nat.pow_le_mono_r; lia).
+    simpl in H0. rewrite Nat.mul_1_r in H0. lia.
+Qed.
 
 Inductive entrywise_le : list nat → list nat → Prop :=
     | entrywise_le_nil : entrywise_le [] []
     | entrywise_le_cons x1 l1 x2 l2 (Hlex : x1 ≤ x2) (Hlel : entrywise_le l1 l2): entrywise_le (x1 :: l1) (x2 :: l2).
 
+Print prime_divisors.
+
+Lemma entrywise_le_extend :
+  forall a1 a2 l1 l2, (a1 <= a2)%nat -> entrywise_le l1 l2 -> entrywise_le (l1 ++ [a1]) (l2 ++ [a2]).
+Proof.
+  intros. induction H0. simpl. constructor. easy. constructor.
+  do 2 rewrite <- app_comm_cons. constructor; easy.
+Qed.
+
+Lemma seq_extend :
+  forall n x, seq x (S n) = seq x n ++ [(x + n)%nat].
+Proof.
+  induction n; intros. simpl. rewrite Nat.add_0_r. easy.
+  replace (seq x (S (S n))) with (x :: seq (S x) (S n)) by easy.
+  rewrite IHn. simpl. replace (x + S n)%nat with (S (x + n))%nat by lia.
+  easy.
+Qed.
+
+Lemma filter_seq_extend :
+  forall n f, (filter f (seq 1 (S n))) = if (f (S n)) then (filter f (seq 1 n) ++ [S n]) else filter f (seq 1 n).
+Proof.
+  intros. rewrite seq_extend. rewrite filter_app. simpl.
+  destruct (f (S n)). easy. apply app_nil_r.
+Qed.
+
+Lemma filter_length :
+  forall {A} f (l : list A), (length (filter f l) <= length l)%nat.
+Proof.
+  intros. induction l. simpl. lia.
+  simpl. destruct (f a). simpl. lia. lia.
+Qed.
+
+Lemma filter_seq_le :
+  forall n f, entrywise_le (seq 1 (length (filter f (seq 1 n)))) (filter f (seq 1 n)).
+Proof.
+  induction n; intros. simpl. constructor.
+  rewrite filter_seq_extend. destruct (f (S n)).
+  rewrite app_length. simpl.
+  replace (length (filter f (seq 1 n)) + 1)%nat with (S (length (filter f (seq 1 n)))) by lia.
+  rewrite seq_extend. apply entrywise_le_extend.
+  specialize (filter_length f (seq 1 n)) as G. rewrite seq_length in G. lia.
+  easy. easy.
+Qed.
+
 Lemma seq_entrywise_le_prime_divisors :
-    ∀ n, entrywise_le (seq 1 (length (prime_divisors n))) (prime_divisors n).
-Admitted.
+  ∀ n, entrywise_le (seq 1 (length (prime_divisors n))) (prime_divisors n).
+Proof.
+  intros. apply filter_seq_le.
+Qed.
 
 Lemma  Rprod_increasing_f :
     ∀ (l1 l2 : list nat) (f : nat → R),
@@ -322,16 +375,28 @@ Proof.
 Qed.
 
 Lemma final_log_bound :
-    ∀ n, 4 ≤ n →
-    Nat.log2 (Nat.log2 n) + 1 <= - / 2 * ln (0.001 / Nat.log2 n).
-Admitted.
+  ∀ n, 2 ≤ n →
+       Nat.log2 (Nat.log2 n) + 1 <= - / 2 * ln (exp (-2) / Nat.log2 n ^ 4).
+Proof.
+  intros.
+  assert (0 < Nat.log2 n)%nat by (apply Nat.log2_pos; lia).
+  rewrite Rcomplements.ln_div.
+  rewrite ln_exp.
+  rewrite Rcomplements.ln_pow.
+  replace (INR 4) with 4 by (simpl; lra).
+  replace (- / 2 * (-2 - 4 * ln (Nat.log2 n))) with (1 + 2 * ln (Nat.log2 n)) by field.
+  specialize (log_bound _ H0) as G. lra.
+  replace 0 with (INR 0) by easy. apply lt_INR; easy.
+  apply exp_pos.
+  replace 0 with (INR 0) by easy. rewrite <- pow_INR. apply lt_INR. simpl. nia.
+Qed.
 
 Theorem φ_lower_bound :
-    ∃ (N0 : nat) (c : R),
-        (∀ n, N0 ≤ n → φ n / n >= c / Nat.log2 n) ∧ c > 0.
+    ∃ (c : R),
+        (∀ n, 2 ≤ n → φ n / n >= c / ((Nat.log2 n) ^ 4)) ∧ c > 0.
 Proof.
-    exists 4%nat. exists 0.001. split.
-    intros. 
+    exists (exp (-2)). split.
+    intros.
     rewrite <- (prime_divisor_pow_prod n) at 2.
     rewrite φ_prime_divisors_power.
     repeat rewrite prod_INR_Rprod.
@@ -362,7 +427,7 @@ Proof.
     replace (/ i + - / j) with (/ i - / j) by reflexivity. 
     apply Rge_le. apply Rge_minus. apply Rle_ge. apply Raux.Rinv_le; auto.
     { 
-        replace 0 with (INR 0%nat) by auto.
+      replace 0 with (INR 0%nat) by auto.
       apply lt_INR. destruct H0. apply le_seq in H0.  lia.
       eapply lt_le_trans with 2%nat. lia. apply prime_ge_2.
       eapply in_prime_decomp_is_prime. apply prime_divisors_decomp.
@@ -370,7 +435,7 @@ Proof.
     }
     rewrite map_ext_in with _ _ _ (λ x : nat, (-2) * / x) _ by auto.
     rewrite Rsum_distr_f. 
-    replace (ln (?[c] / Nat.log2 n)) with (-2 * (-/2 * ln (0.001 / Nat.log2 n))). (* 0.001 can be any constant *)
+    replace (ln (exp (-2) / (Nat.log2 n ^ 4))) with (-2 * (-/2 * ln (exp (-2) / (Nat.log2 n ^ 4)))).
     apply Rmult_le_ge_compat_neg_l. lra. eapply Rle_trans.
     simpl. rewrite map_ext_in with _ _ _ (λ x : nat, 1 / x) _.
     apply harmonic_upper_bound.
@@ -386,12 +451,18 @@ Proof.
     (* side conditions *)
     - assert (0 < Nat.log2 n).
       { replace 0 with (INR 0%nat) by auto. apply lt_INR.
+        apply Nat.log2_pos. lia.
+        (*
         eapply Nat.lt_trans. constructor.
         eapply Nat.lt_le_trans. auto.
         replace 2%nat with (Nat.log2 4) by auto.
-        apply Nat.log2_le_mono. auto. }
-        unfold Rdiv at 1. apply Rmult_lt_0_compat.
-        lra. apply Rinv_0_lt_compat. auto.
+        apply Nat.log2_le_mono. auto.
+        *)
+      }
+      unfold Rdiv at 1. apply Rmult_lt_0_compat.
+      apply exp_pos. apply Rinv_0_lt_compat.
+      replace 0 with (INR 0) in * by easy. apply INR_lt in H0.
+      rewrite <- pow_INR. apply lt_INR. simpl. nia.
     - unfold not. intros. apply map_eq_nil in H0.
       apply prime_divisors_nil_iff in H0. lia.
     - intros. apply map_in_exists in H0 as (y & Hy0 & Hy1).
@@ -432,7 +503,7 @@ Proof.
       now apply pow_nonzero.
     - lia.
     - lia.
-    - lra. 
+    - specialize (exp_pos (-2)). lra.
 Qed.
 
 Local Close Scope R_scope.
