@@ -4,7 +4,8 @@ Require Import Utf8 Arith.
 Import List List.ListNotations.
 Require Import Reals.
 
-Require Import Psatz Misc Primes Totient Primisc Prod Harmonic Log.
+Require Import Psatz Misc Primes Primisc Prod Harmonic Log.
+Require Export Totient.
 Require Import Interval.Tactic.
 Require Import Logic.FunctionalExtensionality.
 
@@ -250,7 +251,9 @@ Inductive entrywise_le : list nat → list nat → Prop :=
     | entrywise_le_nil : entrywise_le [] []
     | entrywise_le_cons x1 l1 x2 l2 (Hlex : x1 ≤ x2) (Hlel : entrywise_le l1 l2): entrywise_le (x1 :: l1) (x2 :: l2).
 
+(*
 Print prime_divisors.
+*)
 
 Lemma entrywise_le_extend :
   forall a1 a2 l1 l2, (a1 <= a2)%nat -> entrywise_le l1 l2 -> entrywise_le (l1 ++ [a1]) (l2 ++ [a2]).
