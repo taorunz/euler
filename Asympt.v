@@ -392,10 +392,8 @@ Proof.
 Qed.
 
 Theorem φ_lower_bound :
-    ∃ (c : R),
-        (∀ n, 2 ≤ n → φ n / n >= c / ((Nat.log2 n) ^ 4)) ∧ c > 0.
+  ∀ n, 2 ≤ n → φ n / n >= exp(-2) / ((Nat.log2 n) ^ 4).
 Proof.
-    exists (exp (-2)). split.
     intros.
     rewrite <- (prime_divisor_pow_prod n) at 2.
     rewrite φ_prime_divisors_power.
@@ -503,7 +501,6 @@ Proof.
       now apply pow_nonzero.
     - lia.
     - lia.
-    - specialize (exp_pos (-2)). lra.
 Qed.
 
 Local Close Scope R_scope.
