@@ -4,7 +4,8 @@ Require Import Utf8 Arith.
 Import List List.ListNotations.
 Require Import Reals.
 
-Require Import Psatz Misc Primes Totient Primisc Prod Harmonic Log.
+Require Import Psatz Misc Primes Primisc Prod Harmonic Log.
+Require Export Totient.
 Require Import Interval.Tactic.
 Require Import Logic.FunctionalExtensionality.
 
