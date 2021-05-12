@@ -1438,7 +1438,7 @@ assert (Hcc : ∀ i, i ∈ coprimes' n → (i * a) mod n ∈ coprimes' n). {
 assert
   (Hperm :
      Permutation (map (λ i, (i * a) mod n) (coprimes' n)) (coprimes' n)). {
-  apply NoDup_Permutation_bis; [ | apply NoDup_coprimes' | | ]; cycle 1. {
+  apply NoDup_Permutation_bis; try apply NoDup_coprimes'; cycle 1. {
     now rewrite map_length.
   } {
     intros i Hi.

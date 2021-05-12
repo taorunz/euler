@@ -1961,7 +1961,7 @@ assert
   (Hperm :
      Permutation (map (λ i, (i * a) mod p) (seq 1 (p - 1)))
        (seq 1 (p - 1))). {
-  apply NoDup_Permutation_bis; [ | apply seq_NoDup | | ]; cycle 1. {
+  apply NoDup_Permutation_bis; try apply seq_NoDup; cycle 1. {
     now rewrite map_length, seq_length.
   } {
     intros i Hi.

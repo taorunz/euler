@@ -226,7 +226,9 @@ Lemma ln_1_minus_x_ge_minus_2x :
 Proof.
     intros.
     apply Rminus_ge.
-    interval with (i_autodiff x).
+    (* i_prec=53 should be the default, but the interval tactic fails without it. 
+       I'm not sure why. -KH *)
+    interval with (i_autodiff x, i_prec 53).
 Qed.
 
 Lemma len_prime_divisors_le_log2 :
@@ -391,7 +393,8 @@ Proof.
   specialize (log_bound _ H0) as G. lra.
   replace 0 with (INR 0) by easy. apply lt_INR; easy.
   apply exp_pos.
-  replace 0 with (INR 0) by easy. rewrite <- pow_INR. apply lt_INR. simpl. nia.
+  replace 0 with (INR 0) by easy. rewrite <- pow_INR. apply lt_INR. simpl. 
+  repeat apply Nat.mul_pos_pos; lia.
 Qed.
 
 Theorem φ_lower_bound :
@@ -412,7 +415,9 @@ Proof.
     intros. replace ((x - 1) / x) with (1 - / x).
     replace (-2 / x) with (- 2 * (/ x)) by lra.
     apply Rge_le. apply ln_1_minus_x_ge_minus_2x.
-    cut (2 <= x). intros. interval.
+    cut (2 <= x). intros.
+    (* Again, we need to specify i_prec=53. -KH *)
+    interval with (i_prec 53).
     replace 2 with (INR (2%nat)) by reflexivity.
     apply le_INR. apply prime_ge_2. eapply in_prime_decomp_is_prime.
     apply prime_divisors_decomp. apply H0. field. 
@@ -463,7 +468,8 @@ Proof.
       unfold Rdiv at 1. apply Rmult_lt_0_compat.
       apply exp_pos. apply Rinv_0_lt_compat.
       replace 0 with (INR 0) in * by easy. apply INR_lt in H0.
-      rewrite <- pow_INR. apply lt_INR. simpl. nia.
+      rewrite <- pow_INR. apply lt_INR. simpl. 
+      repeat apply Nat.mul_pos_pos; lia.
     - unfold not. intros. apply map_eq_nil in H0.
       apply prime_divisors_nil_iff in H0. lia.
     - intros. apply map_in_exists in H0 as (y & Hy0 & Hy1).
