@@ -1,3 +1,5 @@
+(* We copied and modified this file from https://github.com/roglo/coq_euler_prod_form/blob/master/Primes.v *)
+
 (* Prime numbers *)
 
 Set Nested Proofs Allowed.

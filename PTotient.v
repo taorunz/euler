@@ -1,3 +1,5 @@
+(* We copied and modified this file from https://github.com/roglo/coq_euler_prod_form/blob/master/Totient.v *)
+
 Require Import Utf8 Arith.
 Require Import Sorting.Permutation.
 Import List List.ListNotations.

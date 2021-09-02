@@ -1,3 +1,5 @@
+(* We copied and modified this file from https://github.com/roglo/coq_euler_prod_form/blob/master/Primisc.v *)
+
 (* experiments with primes... *)
 
 Set Nested Proofs Allowed.

@@ -1,3 +1,5 @@
+(* We copied and modified this file from https://github.com/roglo/coq_euler_prod_form/blob/master/Misc.v *)
+
 (* Theorems of general usage, which could be (or not) in Coq library *)
 
 Set Nested Proofs Allowed.
