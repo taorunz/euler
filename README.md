@@ -8,13 +8,14 @@ We proved in Coq:
 
 Here <img src="https://render.githubusercontent.com/render/math?math=\phi"> is the Euler's totient function.
 
-Part of code is modified from Daniel de Rauglaudre's proof.
+Part of code is modified from [Daniel de Rauglaudre's proof](https://github.com/roglo/coq_euler_prod_form).
 
 ## Compilation
 
 Compilation requires [Coq](https://coq.inria.fr/) and the [Interval package](http://coq-interval.gforge.inria.fr/). We recommend installing both with the [opam package manager](https://opam.ocaml.org/), using the commands below.
 ```
+opam update
 opam install coq
 opam install coq-interval
 ```
-Run `make all' to compile the proofs. We have tested compilation with Coq versions 8.10.1-8.13.2 and Interval versions 4.0.0-4.2.0.
+Run `make all' to compile the proofs. We have tested compilation with Coq versions 8.10.1-8.14.0 and Interval versions 4.0.0-4.3.1.
