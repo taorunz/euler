@@ -482,7 +482,8 @@ Theorem Nat_eq_mod_sub_0 : ∀ a b c,
   a mod c = b mod c → (a - b) mod c = 0.
 Proof.
 intros * Hab.
-destruct (Nat.eq_dec c 0) as [Hcz| Hcz]; [ now subst c | ].
+destruct (Nat.eq_dec c 0) as [Hcz| Hcz]. 
+subst c. simpl in *. lia.
 specialize (Nat.div_mod a c Hcz) as H1.
 specialize (Nat.div_mod b c Hcz) as H2.
 rewrite H1, H2, Hab.
@@ -966,7 +967,9 @@ Theorem Nat_mul_mod_cancel_r : ∀ a b c n,
   → a ≡ b mod n.
 Proof.
 intros * Hg Hab.
-destruct (Nat.eq_dec n 0) as [Hnz| Hnz]; [ now subst n | ].
+destruct (Nat.eq_dec n 0) as [Hnz| Hnz].
+subst n. rewrite Nat.gcd_0_r in Hg.
+simpl in *. lia.
 destruct (le_dec b a) as [Hba| Hba]. {
   apply Nat_eq_mod_sub_0 in Hab.
   rewrite <- Nat.mul_sub_distr_r in Hab.
