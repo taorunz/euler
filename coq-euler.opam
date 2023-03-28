@@ -6,6 +6,10 @@ description: """
 Coq proof for the asymptotic upper bound of the
  Euler Totient Function φ
 """
+maintainer: ["@taorunz"]
+authors: ["Runzhou Tao and Yuxiang Peng"]
+homepage: "https://github.com/taorunz/euler"
+bug-reports: "https://github.com/taorunz/euler/issues"
 depends: [
   "dune" {>= "2.8"}
   "coq-interval" {>= "4.0.0"}
@@ -26,3 +30,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
+dev-repo: "git+https://github.com/taorunz/euler.git"
