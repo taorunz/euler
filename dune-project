@@ -1,8 +1,13 @@
 (lang dune 2.8)
+(name coq-euler)
 (version 1.0.0)
 (using coq 0.2)
 
 (generate_opam_files true)
+
+(authors "Runzhou Tao and Yuxiang Peng")
+(maintainers "@taorunz")
+(source (github taorunz/euler))
 
 (package
  (name coq-euler)

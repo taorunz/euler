@@ -19,6 +19,6 @@ opam install coq coq-interval
 ```
 Run `make` to compile the proofs. We have tested compilation with Coq versions 8.10.1-8.16.1 and Interval versions 4.0.0-4.6.1.
 
-To use this repository as a library, run `opam pin coq-euler htts://github.com/taorunz/euler.git`.
+To use this repository as a library, run `opam pin coq-euler https://github.com/taorunz/euler.git`.
 Then, to import files into your Coq project, use `Require Import euler.FILENAME`.
 Subsequent updates can be pulled using `opam install coq-euler`.
