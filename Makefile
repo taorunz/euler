@@ -1,20 +1,11 @@
-%: Makefile.coq phony
-	+make -f Makefile.coq $@
+all:
+	@dune build
 
-all: Makefile.coq
-	+make -f Makefile.coq all
+clean:
+	@dune clean
 
-clean: Makefile.coq
-	+make -f Makefile.coq clean
-	rm -f Makefile.coq
+install:
+	@dune install
 
-Makefile.coq: _CoqProject Makefile
-	coq_makefile -f _CoqProject -o Makefile.coq
-
-_CoqProject: ;
-
-Makefile: ;
-
-phony: ;
-
-.PHONY: all clean phony
+uninstall:
+	@dune uninstall
